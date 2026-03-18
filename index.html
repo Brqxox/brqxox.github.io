@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brqxox - Discord Music Bot</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple-dark: #51257C;
+      --purple-mid: #7b3db8;
+      --purple-light: #9d5fd4;
+      --purple-faint: rgba(123,61,184,0.12);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Poppins', sans-serif; background: #080808; color: white; overflow-x: hidden; }
+
+    .site-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 20% 40%, #2a0a4a 0%, transparent 55%),
+                  radial-gradient(ellipse at 80% 60%, #1a0830 0%, transparent 55%), #080808;
+    }
+    .site-bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(0,0,0,0.72); animation: bgShift 6s ease-in-out infinite;
+    }
+
+    .note {
+      position: fixed; color: rgba(255,255,255,0.06); font-size: 20px;
+      animation: noteRise linear infinite; z-index: 1; pointer-events: none;
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 60px; background: rgba(8,8,8,0.65);
+      backdrop-filter: blur(18px); border-bottom: 0.5px solid rgba(123,61,184,0.2);
+    }
+    .nav-logo { font-size: 20px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; color: white; text-decoration: none; }
+    .nav-links { display: flex; gap: 32px; list-style: none; align-items: center; }
+    .nav-links a { font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: rgb(140,140,140); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: white; }
+    .nav-invite { background: linear-gradient(135deg, #51257C, #7b3db8) !important; color: white !important; padding: 9px 22px; border-radius: 6px; transition: opacity 0.2s !important; }
+    .nav-invite:hover { opacity: 0.85; }
+
+    .hero {
+      position: relative; z-index: 10; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 140px 40px 80px;
+    }
+    .hero-tag { font-size: 10px; color: rgb(122,122,122); font-weight: 400; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 16px; animation: fadeUp 0.5s ease both; }
+    .hero-title { font-size: clamp(80px, 13vw, 140px); font-weight: 900; letter-spacing: 4px; line-height: 1; text-transform: uppercase; display: flex; align-items: center; justify-content: center; animation: fadeUp 0.5s 0.08s ease both; }
+    .hero-sub { margin-top: 22px; font-size: 13px; color: rgb(170,170,170); font-weight: 400; max-width: 440px; line-height: 1.9; animation: fadeUp 0.5s 0.16s ease both; }
+    .hero-actions { margin-top: 36px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.5s 0.24s ease both; }
+
+    .btn-primary { background: linear-gradient(135deg, #51257C, #7b3db8); color: white; padding: 13px 30px; border-radius: 8px; font-size: 11px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; text-decoration: none; transition: transform 0.2s, opacity 0.2s; display: inline-block; }
+    .btn-primary:hover { transform: translateY(-2px); opacity: 0.88; }
+    .btn-ghost { background: transparent; color: rgb(170,170,170); padding: 13px 30px; border-radius: 8px; font-size: 11px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; text-decoration: none; border: 0.5px solid rgba(255,255,255,0.15); transition: border-color 0.2s, color 0.2s; display: inline-block; }
+    .btn-ghost:hover { border-color: var(--purple-mid); color: white; }
+
+    .eq-tile { margin-top: 44px; background: #111; padding: 10px 24px; border-radius: 6px; font-size: 9px; letter-spacing: 5px; text-transform: uppercase; display: flex; align-items: center; gap: 12px; animation: fadeUp 0.5s 0.32s ease both; color: rgba(200,200,200,0.7); }
+    .bar { width: 2px; background: var(--purple-mid); transform-origin: bottom; border-radius: 1px; animation: barAnim ease-in-out infinite; }
+
+    .stats-strip { position: relative; z-index: 10; display: flex; justify-content: center; padding: 0 40px 90px; flex-wrap: wrap; }
+    .stat-item { text-align: center; padding: 0 52px; border-right: 0.5px solid rgba(255,255,255,0.07); }
+    .stat-item:last-child { border-right: none; }
+    .stat-num { font-size: 38px; font-weight: 900; }
+    .stat-label { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: rgb(110,110,110); margin-top: 4px; }
+
+    .section-wrap { position: relative; z-index: 10; }
+    section { max-width: 1100px; margin: 0 auto; padding: 80px 60px; }
+    .section-tag { font-size: 10px; letter-spacing: 6px; text-transform: uppercase; color: var(--purple-light); margin-bottom: 12px; }
+    .section-title { font-size: clamp(26px, 3.5vw, 44px); font-weight: 900; letter-spacing: 1px; text-transform: uppercase; line-height: 1.1; }
+    .section-divider { width: 36px; height: 2px; background: linear-gradient(to right, var(--purple-dark), var(--purple-light)); margin: 18px 0 38px; border-radius: 2px; }
+
+    .feat-simple-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .feat-simple-card { background: #0f0f0f; border: 0.5px solid rgba(123,61,184,0.16); border-radius: 14px; padding: 24px 22px; transition: border-color 0.2s, transform 0.2s; }
+    .feat-simple-card:hover { border-color: rgba(123,61,184,0.45); transform: translateY(-2px); }
+    .feat-simple-icon { font-size: 22px; margin-bottom: 12px; }
+    .feat-simple-title { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--purple-light); margin-bottom: 8px; }
+    .feat-simple-desc { font-size: 11px; color: rgb(130,130,130); line-height: 1.7; }
+
+    .cmd-tabs { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+    .cmd-tab { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 8px 18px; border-radius: 6px; border: 0.5px solid rgba(255,255,255,0.1); background: transparent; color: rgb(130,130,130); cursor: pointer; transition: all 0.2s; font-family: 'Poppins', sans-serif; }
+    .cmd-tab:hover { color: white; border-color: rgba(123,61,184,0.4); }
+    .cmd-tab.active { background: var(--purple-faint); border-color: rgba(123,61,184,0.5); color: var(--purple-light); }
+    .cmd-panel { display: none; }
+    .cmd-panel.active { display: grid; }
+    .commands-grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+    .cmd-card { background: #0f0f0f; border: 0.5px solid rgba(123,61,184,0.16); border-radius: 14px; padding: 18px 20px; transition: border-color 0.2s, transform 0.2s; }
+    .cmd-card:hover { border-color: rgba(123,61,184,0.45); transform: translateY(-2px); }
+    .cmd-name { font-size: 13px; font-weight: 700; color: var(--purple-light); font-family: 'Courier New', monospace; margin-bottom: 7px; }
+    .cmd-desc { font-size: 11px; color: rgb(135,135,135); line-height: 1.65; }
+    .cmd-badge { display: inline-block; margin-top: 10px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; background: var(--purple-faint); color: var(--purple-light); padding: 3px 8px; border-radius: 4px; }
+    .cmd-badge.dj { background: rgba(30,100,200,0.12); color: #6aabff; margin-left: 5px; }
+    .ic { background: rgba(123,61,184,0.18); color: #9d5fd4; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-family: 'Courier New', monospace; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .info-card { background: #0f0f0f; border: 0.5px solid rgba(123,61,184,0.16); border-radius: 14px; padding: 28px; }
+    .info-card h3 { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; color: var(--purple-light); }
+    .info-card p { font-size: 12px; color: rgb(140,140,140); line-height: 1.85; }
+
+    .cta-box { background: linear-gradient(135deg, rgba(81,37,124,0.28), rgba(123,61,184,0.12)); border: 0.5px solid rgba(123,61,184,0.28); border-radius: 22px; padding: 70px 60px; text-align: center; }
+    .cta-box p { font-size: 13px; color: rgb(160,160,160); max-width: 480px; margin: 14px auto 36px; line-height: 1.9; }
+
+    footer { position: relative; z-index: 10; text-align: center; padding: 36px 40px; border-top: 0.5px solid rgba(255,255,255,0.05); font-size: 10px; color: rgb(70,70,70); letter-spacing: 3px; text-transform: uppercase; }
+    footer a { color: rgb(100,100,100); text-decoration: none; }
+    footer a:hover { color: var(--purple-light); }
+
+    .gradient-texteffect {
+      background: linear-gradient(to right, #51257C 20%, #7b3db8 40%, #9d5fd4 60%, #7b3db8 80%, #51257C 100%);
+      background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shine 5s linear infinite;
+    }
+
+    @keyframes shine { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+    @keyframes noteRise { 0% { transform: translateY(0); opacity: 0.5; } 100% { transform: translateY(-100vh); opacity: 0; } }
+    @keyframes fadeUp { 0% { opacity: 0; transform: translateY(22px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes barAnim { 0%,100% { transform: scaleY(0.2); } 50% { transform: scaleY(1); } }
+    @keyframes bgShift { 0%,100% { opacity: 0.82; } 50% { opacity: 0.76; } }
+
+    @media (max-width: 900px) { .feat-simple-grid { grid-template-columns: 1fr 1fr; } .info-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; } .nav-links { display: none; }
+      section { padding: 60px 24px; } .cta-box { padding: 44px 24px; }
+      .stat-item { border-right: none; padding: 0 24px; } .stats-strip { gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="site-bg"></div>
+  <span class="note" style="left:3%;bottom:0;animation-duration:8s;animation-delay:0s;">♪</span>
+  <span class="note" style="left:13%;bottom:0;animation-duration:10s;animation-delay:2s;">♫</span>
+  <span class="note" style="left:25%;bottom:0;animation-duration:7s;animation-delay:3.5s;">♩</span>
+  <span class="note" style="left:52%;bottom:0;animation-duration:9s;animation-delay:1s;">♬</span>
+  <span class="note" style="left:69%;bottom:0;animation-duration:8.5s;animation-delay:2.8s;">♪</span>
+  <span class="note" style="left:83%;bottom:0;animation-duration:6.5s;animation-delay:4.2s;">♫</span>
+  <span class="note" style="left:94%;bottom:0;animation-duration:9.5s;animation-delay:1.5s;">♩</span>
+
+  <nav>
+    <a href="#" class="nav-logo">BRQ<span class="gradient-texteffect">XOX</span></a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#commands">Commands</a></li>
+      <li><a href="#setup">Setup</a></li>
+      <li><a href="https://discord.gg/F5fYzqtB3b">Support</a></li>
+      <li><a href="#invite" class="nav-invite">Invite Bot</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">Discord Music Bot</div>
+    <div class="hero-title"><span>BRQ</span><span class="gradient-texteffect">XOX</span></div>
+    <p class="hero-sub">Your vibe. Your playlist. High-quality audio powered by Lavalink — stream from YouTube, Spotify, SoundCloud and more.</p>
+    <div class="hero-actions">
+      <a href="#invite" class="btn-primary">Invite to Discord</a>
+      <a href="#commands" class="btn-ghost">View Commands</a>
+    </div>
+    <div class="eq-tile">
+      <div style="display:flex;align-items:flex-end;gap:3px;height:14px;">
+        <div class="bar" style="height:14px;animation-duration:1.1s;"></div>
+        <div class="bar" style="height:9px;animation-duration:0.8s;animation-delay:0.1s;"></div>
+        <div class="bar" style="height:14px;animation-duration:0.95s;animation-delay:0.2s;"></div>
+        <div class="bar" style="height:7px;animation-duration:1.2s;animation-delay:0.05s;"></div>
+        <div class="bar" style="height:11px;animation-duration:0.85s;animation-delay:0.3s;"></div>
+        <div class="bar" style="height:14px;animation-duration:1.05s;animation-delay:0.15s;"></div>
+      </div>
+      <span>Now playing</span>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:14px;">
+        <div class="bar" style="height:14px;animation-duration:1.05s;animation-delay:0.15s;"></div>
+        <div class="bar" style="height:11px;animation-duration:0.85s;animation-delay:0.3s;"></div>
+        <div class="bar" style="height:7px;animation-duration:1.2s;animation-delay:0.05s;"></div>
+        <div class="bar" style="height:14px;animation-duration:0.95s;animation-delay:0.2s;"></div>
+        <div class="bar" style="height:9px;animation-duration:0.8s;animation-delay:0.1s;"></div>
+        <div class="bar" style="height:14px;animation-duration:1.1s;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="stat-item"><div class="stat-num gradient-texteffect">20+</div><div class="stat-label">Commands</div></div>
+    <div class="stat-item"><div class="stat-num gradient-texteffect">3</div><div class="stat-label">Platforms</div></div>
+    <div class="stat-item"><div class="stat-num gradient-texteffect">99.9%</div><div class="stat-label">Uptime</div></div>
+    <div class="stat-item"><div class="stat-num gradient-texteffect">Free</div><div class="stat-label">Always</div></div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="section-wrap" id="features">
+    <section>
+      <div class="section-tag">What it does</div>
+      <div class="section-title">Everything you need</div>
+      <div class="section-divider"></div>
+      <div class="feat-simple-grid">
+
+        <div class="feat-simple-card">
+          <div class="feat-simple-icon">🎵</div>
+          <div class="feat-simple-title">Multi-Platform Playback</div>
+          <div class="feat-simple-desc">YouTube, Spotify playlists, SoundCloud and direct URLs — single tracks or full playlist imports.</div>
+        </div>
+
+        <div class="feat-simple-card">
+          <div class="feat-simple-icon">🔍</div>
+          <div class="feat-simple-title">Smart Search</div>
+          <div class="feat-simple-desc">Get the top 10 YouTube results as a selectable menu and pick the exact track you want.</div>
+        </div>
+
+        <div class="feat-simple-card">
+          <div class="feat-simple-icon">📋</div>
+          <div class="feat-simple-title">Full Queue Control</div>
+          <div class="feat-simple-desc">Move, remove, jump, shuffle and remove duplicates. Page through large queues with ease.</div>
+        </div>
+
+        <div class="feat-simple-card">
+          <div class="feat-simple-icon">⏱️</div>
+          <div class="feat-simple-title">Seek & Forward</div>
+          <div class="feat-simple-desc">Skip forward by any number of seconds. Live stream detection blocks invalid seeks automatically.</div>
+        </div>
+
+        <div class="feat-simple-card">
+          <div class="feat-simple-icon">🎤</div>
+          <div class="feat-simple-title">Lyrics</div>
+          <div class="feat-simple-desc">Fetch lyrics for the current track or search any song by name instantly.</div>
+        </div>
+
+        <div class="feat-simple-card">
+          <div class="feat-simple-icon">⚙️</div>
+          <div class="feat-simple-title">DJ Role & Channels</div>
+          <div class="feat-simple-desc">Lock controls to a DJ role and pin bot responses to a dedicated channel.</div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- COMMANDS -->
+  <div class="section-wrap" id="commands">
+    <section>
+      <div class="section-tag">Full command list</div>
+      <div class="section-title">Every command</div>
+      <div class="section-divider"></div>
+
+      <div class="cmd-tabs">
+        <button class="cmd-tab active" onclick="showTab('track',this)">🎶 Track</button>
+        <button class="cmd-tab" onclick="showTab('queue',this)">📜 Queue</button>
+        <button class="cmd-tab" onclick="showTab('settings',this)">⚙️ Settings</button>
+      </div>
+
+      <!-- TRACK TAB -->
+      <div class="cmd-panel active commands-grid" id="tab-track">
+        <div class="cmd-card">
+          <div class="cmd-name">/play [query]</div>
+          <div class="cmd-desc">Play a track by name or URL. Supports YouTube, Spotify playlists, SoundCloud and direct file URLs. Auto-queues if something is already playing and shows playlist size for bulk imports.</div>
+          <span class="cmd-badge">Track</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/search [query]</div>
+          <div class="cmd-desc">Search YouTube and get the top 10 results as an interactive select menu. Choose exactly which track you want — no guessing from the first result.</div>
+          <span class="cmd-badge">Track</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/playnext [query]</div>
+          <div class="cmd-desc">Queue a track to play immediately after the current one — jumps it straight to the front of the queue without interrupting what's playing.</div>
+          <span class="cmd-badge">Track</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/pause</div>
+          <div class="cmd-desc">Pause the currently playing track at its current position.</div>
+          <span class="cmd-badge">Track</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/resume</div>
+          <div class="cmd-desc">Resume a paused track, continuing from exactly where it stopped.</div>
+          <span class="cmd-badge">Track</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/skip</div>
+          <div class="cmd-desc">Skip the current track and immediately play the next one in the queue.</div>
+          <span class="cmd-badge">Track</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/previous</div>
+          <div class="cmd-desc">Go back and replay the previously played track. The bot remembers the last track even after skipping.</div>
+          <span class="cmd-badge">Track</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/stop</div>
+          <div class="cmd-desc">Stop all playback, wipe the entire queue and disconnect the bot from the voice channel.</div>
+          <span class="cmd-badge">Track</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/nowplaying</div>
+          <div class="cmd-desc">Show a now-playing embed with track title, requester, a live progress bar and time remaining. Supports live streams with a 🔴 LIVE indicator.</div>
+          <span class="cmd-badge">Track</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/lyrics [name?]</div>
+          <div class="cmd-desc">Fetch lyrics for the currently playing track. Optionally pass a song name to search for lyrics for any track, even if it's not playing.</div>
+          <span class="cmd-badge">Track</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/volume [0–100]</div>
+          <div class="cmd-desc">Set playback volume between 0 and 100. Run with no value to check the current volume level without changing it.</div>
+          <span class="cmd-badge">Track</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/forward [seconds]</div>
+          <div class="cmd-desc">Jump forward by a specific number of seconds in the current track. Automatically blocked on live streams.</div>
+          <span class="cmd-badge">Track</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/loop [track / queue]</div>
+          <div class="cmd-desc">Toggle loop mode. Use <span class="ic">track</span> to repeat the current song, or <span class="ic">queue</span> to loop the whole queue. Run the same option again to disable.</div>
+          <span class="cmd-badge">Track</span><span class="cmd-badge dj">DJ</span>
+        </div>
+      </div>
+
+      <!-- QUEUE TAB -->
+      <div class="cmd-panel commands-grid" id="tab-queue">
+        <div class="cmd-card">
+          <div class="cmd-name">/queue [page?]</div>
+          <div class="cmd-desc">View the server queue — 10 tracks per page with duration, title and requester for each. Shows the currently playing track at the top. Pass a page number for long queues.</div>
+          <span class="cmd-badge">Queue</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/shuffle</div>
+          <div class="cmd-desc">Randomly shuffle all tracks currently in the queue without affecting the now-playing track.</div>
+          <span class="cmd-badge">Queue</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/move [position] [destination]</div>
+          <div class="cmd-desc">Move a track from one position in the queue to another. Both values must be valid positions within the current queue length.</div>
+          <span class="cmd-badge">Queue</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/remove [position]</div>
+          <div class="cmd-desc">Remove a specific track from the queue by its position number. Responds with the track name that was removed.</div>
+          <span class="cmd-badge">Queue</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/jump [position]</div>
+          <div class="cmd-desc">Jump directly to a specific position in the queue — moves that track to the front and skips to it immediately.</div>
+          <span class="cmd-badge">Queue</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/skipto [position]</div>
+          <div class="cmd-desc">Skip everything up to a position in the queue — clears all tracks before it and starts playing from that point.</div>
+          <span class="cmd-badge">Queue</span><span class="cmd-badge dj">DJ</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/removeduplicates</div>
+          <div class="cmd-desc">Scan the entire queue and automatically remove duplicate tracks, keeping only the first occurrence of each URL. Reports how many were removed.</div>
+          <span class="cmd-badge">Queue</span><span class="cmd-badge dj">DJ</span>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div class="cmd-panel commands-grid" id="tab-settings">
+        <div class="cmd-card">
+          <div class="cmd-name">/help</div>
+          <div class="cmd-desc">Display all command categories with interactive dropdown navigation, plus quick-access buttons for invite, support server, setup guide and donations.</div>
+          <span class="cmd-badge">Settings</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/setdefaultchannel [channel]</div>
+          <div class="cmd-desc">Pin all bot responses to a specific text channel in your server. Keeps everything organised. Requires the <span class="ic">Manage Guild</span> permission.</div>
+          <span class="cmd-badge">Settings</span>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-name">/removedefaultchannel</div>
+          <div class="cmd-desc">Remove the configured default channel so the bot responds anywhere again. Requires the <span class="ic">Manage Guild</span> permission.</div>
+          <span class="cmd-badge">Settings</span>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- SETUP & INFO -->
+  <div class="section-wrap" id="setup">
+    <section>
+      <div class="section-tag">How it works</div>
+      <div class="section-title">Setup & Permissions</div>
+      <div class="section-divider"></div>
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>DJ Role</h3>
+          <p>Most queue and playback controls require the user to have a <span class="ic">DJ</span> role. Create a server role named exactly <span class="ic">DJ</span> and assign it to trusted members. Without it, users can still use /play, /search, /queue, /nowplaying and /lyrics freely.</p>
+        </div>
+        <div class="info-card">
+          <h3>Default Channel</h3>
+          <p>Use <span class="ic">/setdefaultchannel</span> to pin all bot responses to one text channel — great for keeping your server tidy. Requires <span class="ic">Manage Guild</span> permission. Remove it any time with <span class="ic">/removedefaultchannel</span>.</p>
+        </div>
+        <div class="info-card">
+          <h3>Voice Channel Rules</h3>
+          <p>You must be in a voice channel to use any playback commands. If the bot is already active in a different voice channel in your server, join that same channel before issuing commands.</p>
+        </div>
+        <div class="info-card">
+          <h3>Supported Sources</h3>
+          <p>BRQXOX supports YouTube search and direct URLs, full Spotify playlist imports, SoundCloud tracks, and direct file URLs. Live streams are fully supported with 🔴 LIVE indicators in the queue and now-playing embeds.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- CTA -->
+  <div class="section-wrap" id="invite">
+    <section style="padding-top:0;">
+      <div class="cta-box">
+        <div class="section-tag" style="text-align:center;">Ready to listen?</div>
+        <div class="section-title">Add BRQXOX to your server</div>
+        <p>Free to use. No setup required beyond an invite. Join a voice channel, type <span class="ic">/play</span> and you're in.</p>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+          <a href="#" class="btn-primary">Invite to Discord</a>
+          <a href="https://discord.gg/GtNTAr5EWR" class="btn-ghost">Join Support Server</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div style="margin-bottom:10px;font-size:16px;font-weight:900;letter-spacing:3px;">BRQ<span class="gradient-texteffect">XOX</span></div>
+    <div style="margin-bottom:14px;">Your vibe. Your playlist.</div>
+    <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
+      <a href="#">Invite</a>
+      <a href="https://discord.gg/GtNTAr5EWR">Support</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+  </footer>
+
+  <script>
+    function showTab(id, btn) {
+      document.querySelectorAll('.cmd-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.cmd-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-'+id).classList.add('active');
+      btn.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>
